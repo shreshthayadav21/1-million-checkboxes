@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Million checkboxes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-cyan: #00f5ff;
+            --neon-purple: #bf00ff;
+            --neon-pink: #ff0080;
+            --neon-green: #00ff88;
+            --dark-bg: #04060f;
+            --panel-bg: #080d1a;
+            --border-glow: rgba(0, 245, 255, 0.2);
+            --text-dim: rgba(0, 245, 255, 0.45);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--neon-cyan);
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+            padding: 0;
+            overflow-x: hidden;
+            cursor: crosshair;
+        }
+
+        /* Animated grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 245, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 245, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+            animation: gridShift 20s linear infinite;
+        }
+
+        @keyframes gridShift {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 40px; }
+        }
+
+        /* Vignette */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(4, 6, 15, 0.85) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .wrapper {
+            position: relative;
+            z-index: 2;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .title-block {}
+
+        h1 {
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--neon-cyan);
+            text-shadow:
+                0 0 10px rgba(0, 245, 255, 0.9),
+                0 0 30px rgba(0, 245, 255, 0.4),
+                0 0 60px rgba(0, 245, 255, 0.15);
+            line-height: 1;
+            margin-bottom: 0.3rem;
+        }
+
+        .subtitle {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.78rem;
+            letter-spacing: 0.35em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        /* Stats panel */
+        .stats-panel {
+            display: flex;
+            gap: 1px;
+            background: rgba(0, 245, 255, 0.1);
+            border: 1px solid rgba(0, 245, 255, 0.15);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .stat-box {
+            padding: 0.5rem 1.1rem;
+            background: var(--panel-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            min-width: 80px;
+        }
+
+        .stat-label {
+            font-size: 0.58rem;
+            letter-spacing: 0.3em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 8px rgba(0, 245, 255, 0.7);
+            transition: all 0.15s;
+        }
+
+        .stat-value.flash {
+            color: var(--neon-green);
+            text-shadow: 0 0 12px rgba(0, 255, 136, 0.9);
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,245,255,0.4), rgba(191,0,255,0.4), transparent);
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: -3px;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-purple);
+        }
+
+        /* Checkbox grid */
+        #container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 26px);
+            gap: 5px;
+        }
+
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 26px;
+            height: 26px;
+            background: #0a0f1e;
+            border: 1px solid rgba(0, 245, 255, 0.12);
+            border-radius: 3px;
+            cursor: crosshair;
+            margin: 0;
+            transition: all 0.12s ease;
+            position: relative;
+        }
+
+        input[type="checkbox"]:hover {
+            border-color: rgba(0, 245, 255, 0.5);
+            background: rgba(0, 245, 255, 0.06);
+            box-shadow: 0 0 8px rgba(0, 245, 255, 0.2), inset 0 0 4px rgba(0, 245, 255, 0.05);
+        }
+
+        input[type="checkbox"]:checked {
+            background: linear-gradient(135deg, #00ccdd, #00f5ff);
+            border-color: var(--neon-cyan);
+            box-shadow:
+                0 0 8px rgba(0, 245, 255, 0.8),
+                0 0 20px rgba(0, 245, 255, 0.35),
+                inset 0 0 6px rgba(255, 255, 255, 0.25);
+            animation: checkPop 0.18s ease;
+        }
+
+        input[type="checkbox"]:nth-child(3n+1):checked {
+            background: linear-gradient(135deg, #cc00ee, #bf00ff);
+            border-color: var(--neon-purple);
+            box-shadow:
+                0 0 8px rgba(191, 0, 255, 0.8),
+                0 0 20px rgba(191, 0, 255, 0.35),
+                inset 0 0 6px rgba(255, 255, 255, 0.2);
+        }
+
+        input[type="checkbox"]:nth-child(5n+2):checked {
+            background: linear-gradient(135deg, #ee0060, #ff0080);
+            border-color: var(--neon-pink);
+            box-shadow:
+                0 0 8px rgba(255, 0, 128, 0.8),
+                0 0 20px rgba(255, 0, 128, 0.35),
+                inset 0 0 6px rgba(255, 255, 255, 0.2);
+        }
+
+        input[type="checkbox"]:nth-child(7n+3):checked {
+            background: linear-gradient(135deg, #00cc66, #00ff88);
+            border-color: var(--neon-green);
+            box-shadow:
+                0 0 8px rgba(0, 255, 136, 0.8),
+                0 0 20px rgba(0, 255, 136, 0.35),
+                inset 0 0 6px rgba(255, 255, 255, 0.2);
+        }
+
+        input[type="checkbox"]:checked:hover {
+            filter: brightness(1.2);
+            transform: scale(1.1);
+        }
+
+        @keyframes checkPop {
+            0% { transform: scale(0.85); }
+            60% { transform: scale(1.12); }
+            100% { transform: scale(1); }
+        }
+
+        /* Progress bar */
+        .progress-wrap {
+            margin-top: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar-track {
+            height: 3px;
+            background: rgba(0, 245, 255, 0.08);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan), var(--neon-green));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 8px rgba(0, 245, 255, 0.6);
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.4rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        /* Connection status */
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(4, 6, 15, 0.92);
+            border-top: 1px solid rgba(0, 245, 255, 0.1);
+            padding: 0.4rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(8px);
+        }
+
+        .conn-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .conn-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--neon-green);
+            box-shadow: 0 0 6px var(--neon-green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .conn-dot.offline {
+            background: var(--neon-pink);
+            box-shadow: 0 0 6px var(--neon-pink);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        .status-right {
+            font-size: 0.62rem;
+            letter-spacing: 0.2em;
+            color: rgba(0,245,255,0.2);
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+        }
+
+        /* Corner decorations */
+        .corner {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        .corner-tl { top: 12px; left: 12px; border-top: 1px solid var(--neon-cyan); border-left: 1px solid var(--neon-cyan); box-shadow: -2px -2px 8px rgba(0,245,255,0.3); }
+        .corner-tr { top: 12px; right: 12px; border-top: 1px solid var(--neon-cyan); border-right: 1px solid var(--neon-cyan); box-shadow: 2px -2px 8px rgba(0,245,255,0.3); }
+        .corner-bl { bottom: 40px; left: 12px; border-bottom: 1px solid var(--neon-purple); border-left: 1px solid var(--neon-purple); box-shadow: -2px 2px 8px rgba(191,0,255,0.3); }
+        .corner-br { bottom: 40px; right: 12px; border-bottom: 1px solid var(--neon-purple); border-right: 1px solid var(--neon-purple); box-shadow: 2px 2px 8px rgba(191,0,255,0.3); }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--dark-bg); }
+        ::-webkit-scrollbar-thumb { background: rgba(0,245,255,0.2); border-radius: 2px; }
+
+        /* ── Error toast ───────────────────────────────────────────── */
+        .error-toast {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(-120%);
+            z-index: 200;
+            background: rgba(8, 13, 26, 0.95);
+            border: 1px solid var(--neon-pink);
+            border-radius: 4px;
+            padding: 0.55rem 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 0 18px rgba(255, 0, 128, 0.35), inset 0 0 12px rgba(255, 0, 128, 0.05);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+        }
+
+        .error-toast.visible {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .error-toast-icon {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--neon-pink);
+            box-shadow: 0 0 8px var(--neon-pink);
+            flex-shrink: 0;
+        }
+
+        .error-toast-msg {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 0.25em;
+            color: var(--neon-pink);
+            text-transform: uppercase;
+            text-shadow: 0 0 8px rgba(255, 0, 128, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <!-- Error toast -->
+    <div class="error-toast" id="error-toast">
+        <div class="error-toast-icon"></div>
+        <span class="error-toast-msg" id="error-toast-msg">Please wait</span>
+    </div>
+
+    <div class="wrapper">
+        <div class="header">
+            <div class="title-block">
+                <h1>Checkboxes</h1>
+                <div class="subtitle">Real-time sync &nbsp;/&nbsp; Multi-instance</div>
+            </div>
+            <div class="stats-panel">
+                <div class="stat-box">
+                    <span class="stat-label">Checked</span>
+                    <span class="stat-value" id="stat-checked">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Total</span>
+                    <span class="stat-value" id="stat-total">100</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Fill %</span>
+                    <span class="stat-value" id="stat-pct">0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div id="container"></div>
+
+        <div class="progress-wrap">
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-label">
+                <span>0%</span>
+                <span id="progress-text">0 / 100 checked</span>
+                <span>100%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div class="conn-indicator">
+            <div class="conn-dot" id="conn-dot"></div>
+            <span id="conn-label">connected</span>
+        </div>
+        <div class="status-right">CHK-SYS v2.0</div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const container = document.getElementById('container');
+        const CHECKBOX_COUNT = 100;
+        let lastChanged = null;
+
+        // ── stats helpers ──────────────────────────────────────────────
+        function updateStats() {
+            const checked = container.querySelectorAll('input:checked').length;
+            const pct = (checked / CHECKBOX_COUNT * 100).toFixed(2);
+
+            document.getElementById('stat-checked').textContent = checked;
+            document.getElementById('stat-pct').textContent = pct;
+            document.getElementById('progress-fill').style.width = pct + '%';
+            document.getElementById('progress-text').textContent = `${checked} / ${CHECKBOX_COUNT} checked`;
+
+            const val = document.getElementById('stat-checked');
+            val.classList.add('flash');
+            clearTimeout(val._t);
+            val._t = setTimeout(() => val.classList.remove('flash'), 300);
+        }
+
+        // ── error toast ────────────────────────────────────────────────
+        let toastTimer = null;
+        function showErrorToast(message) {
+            const toast = document.getElementById('error-toast');
+            document.getElementById('error-toast-msg').textContent = message;
+            toast.classList.add('visible');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('visible'), 2500);
+        }
+
+        // ── connection status ──────────────────────────────────────────
+        socket.on('connect', () => {
+            document.getElementById('conn-dot').classList.remove('offline');
+            document.getElementById('conn-label').textContent = 'connected';
+        });
+
+        socket.on('disconnect', () => {
+            document.getElementById('conn-dot').classList.add('offline');
+            document.getElementById('conn-label').textContent = 'disconnected';
+        });
+
+        // ── server error (rate limiting) ───────────────────────────────
+        socket.on('server:error', (data) => {
+            const errorMessage = data.error;
+            showErrorToast(errorMessage);
+            if(lastChanged) {
+                lastChanged.input.checked = lastChanged.checked; // ← revert the checkbox
+                lastChanged = null;
+            }
+        });
+
+        // ── checkbox sync from other clients ──────────────────────────
+        
+        socket.on('server:checkbox:change', (data) => {
+            console.log('Socket server event', data);
+            const { index, checked } = data;
+
+            const input = document.getElementById(`checkbox-${index}`);
+            if (input) {
+                input.checked = checked;
+                updateStats();
+            }
+        });
+
+        // ── initial load ───────────────────────────────────────────────
+        window.addEventListener('load', async () => {
+            const response = await fetch('/checkboxes', { method: 'GET' });
+            const data = await response.json();
+
+            if (data && data.checkboxes) {
+                data.checkboxes.forEach((checked, index) => {
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.id = `checkbox-${index}`;
+                    input.checked = !!checked;
+
+                    input.addEventListener('change', (event) => {
+                        const checked = event.target.checked;
+                        console.log('Checkbox changed', { index, checked });
+                        lastChanged = { input: event.target, checked: !checked };
+                        socket.emit('client:checkbox:change', { index, checked });
+                        updateStats();
+                    });
+
+                    container.appendChild(input);
+                });
+
+                updateStats(); // reflect restored state on load
+            }
+        });
+    </script>
+</body>
+</html>
